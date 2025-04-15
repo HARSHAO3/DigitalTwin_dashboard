@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Motor Parameters Monitoring</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+
+        #loginPage {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-image: url('first page background.jpeg');
+            background-size: cover;
+            background-position: center;
+        }
+
+        .login-container {
+            background-color: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            color: white;
+        }
+
+        .login-container h2 {
+            margin-bottom: 20px;
+        }
+
+        .login-container input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        .login-container input[type="submit"] {
+            background-color: #28a745;
+            color: white;
+            cursor: pointer;
+        }
+
+        .login-container input[type="submit"]:hover {
+            background-color: #218838;
+        }
+
+        #parametersPage {
+            display: none;
+            padding: 20px;
+            background-image: url('second page background.jpeg');
+            background-size: cover;
+            background-position: center;
+            min-height: 100vh;
+        }
+
+        #faultDescriptionPage {
+            display: none;
+            padding: 20px;
+            background-image: url('third page background.jpeg');
+            background-size: cover;
+            background-position: center;
+            min-height: 100vh;
+        }
+
+        h1, h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: black;
+            font-weight: bold;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 10px;
+            border-radius: 8px;
+            display: inline-block;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 20px;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: center;
+            border: 1px solid #ccc;
+        }
+
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .fault {
+            background-color: #ffdddd;
+            color: red;
+        }
+
+        .normal {
+            background-color: #ddffdd;
+            color: green;
+        }
+
+        .highlighted-row {
+            font-weight: bold;
+            background-color: rgba(255, 255, 255, 0.8);
+            color: black;
+        }
+
+        .file-input {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .file-input input {
+            font-weight: bold;
+            color: white;
+            background-color: #007bff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .file-input input:hover {
+            background-color: #0056b3;
+        }
+
+        #fullFaultDetails {
+            margin-top: 10px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .back-button {
+            display: block;
+            margin: 0 auto 20px;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            text-align: center;
+            text-decoration: none;
+            border-radius: 5px;
+            width: fit-content;
+        }
+
+        .back-button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Page -->
+    <div id="loginPage">
+        <div class="login-container">
+            <h2>Login</h2>
+            <form id="loginForm" onsubmit="return handleLogin(event)">
+                <input type="text" id="username" placeholder="Username" required>
+                <input type="password" id="password" placeholder="Password" required>
+                <input type="submit" value="Login">
+            </form>
+        </div>
+    </div>
+
+    <!-- Parameters Page -->
+    <div id="parametersPage">
+        <h1>Motor Parameters Monitoring</h1>
+        <div class="file-input">
+            <input type="file" id="csvFile" accept=".csv" onchange="handleFileUpload(event)" />
+        </div>
+        <table id="faultTable">
+            <thead>
+                <tr>
+                    <th>Parameter</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Voltage</td>
+                    <td id="voltageFault" class="normal">Normal</td>
+                </tr>
+                <tr>
+                    <td>Current</td>
+                    <td id="currentFault" class="normal">Normal</td>
+                </tr>
+                <tr>
+                    <td>Temperature</td>
+                    <td id="temperatureFault" class="normal">Normal</td>
+                </tr>
+                <tr>
+                    <td>Vibration</td>
+                    <td id="vibrationFault" class="normal">Normal</td>
+                </tr>
+            </tbody>
+        </table>
+        <h2>Predicted Fault Names</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Fault Name</th>
+                </tr>
+            </thead>
+            <tbody id="predictedFaultNames">
+                <tr class="highlighted-row">
+                    <td>No faults detected</td>
+                </tr>
+            </tbody>
+        </table>
+        <h2>Real-Time Data</h2>
+        <table id="currentRowTable">
+            <thead>
+                <tr>
+                    <th>Voltage</th>
+                    <th>Current</th>
+                    <th>Temperature</th>
+                    <th>Vibration</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td id="currentVoltage">-</td>
+                    <td id="currentCurrent">-</td>
+                    <td id="currentTemperature">-</td>
+                    <td id="currentVibration">-</td>
+                </tr>
+            </tbody>
+        </table>
+        <a href="#" class="back-button" onclick="showFaultDescriptions()">View Fault Descriptions</a>
+    </div>
+
+    <!-- Fault Description Page -->
+    <div id="faultDescriptionPage">
+        <h1>Fault Descriptions</h1>
+        <table>
+            <thead>
+                <tr>
+                    <th>Fault</th>
+                    <th>Description</th>
+                    <th>Causes</th>
+                    <th>Effects</th>
+                    <th>Proactive Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Voltage out of range</td>
+                    <td>Occurs when the voltage exceeds safe operational limits.</td>
+                    <td>Power supply instability, equipment overload.</td>
+                    <td>Damage to insulation, overheating.</td>
+                    <td>Ensure stable power supply, use voltage regulators.</td>
+                </tr>
+                <tr>
+                    <td>High current draw</td>
+                    <td>Excessive current consumption beyond rated values.</td>
+                    <td>Short circuits, overloads, rotor faults.</td>
+                    <td>Increased heat, potential equipment failure.</td>
+                    <td>Perform regular maintenance, monitor load conditions.</td>
+                </tr>
+                <tr>
+                    <td>Overheating</td>
+                    <td>Temperature exceeds operational thresholds.</td>
+                    <td>Poor ventilation, bearing friction, overloads.</td>
+                    <td>Insulation failure, component degradation.</td>
+                    <td>Improve cooling, reduce load, use thermal sensors.</td>
+                </tr>
+                <tr>
+                    <td>Excessive vibration</td>
+                    <td>Vibration levels surpass acceptable limits.</td>
+                    <td>Misalignment, loose components, rotor imbalance.</td>
+                    <td>Mechanical wear, operational instability.</td>
+                    <td>Inspect and align components, balance rotors.</td>
+                </tr>
+                <tr>
+                    <td>Stator winding fault</td>
+                    <td>Damage or short circuits in the stator windings.</td>
+                    <td>Overheating, voltage fluctuations.</td>
+                    <td>Reduced motor efficiency, eventual failure.</td>
+                    <td>Regular insulation testing, ensure voltage stability.</td>
+                </tr>
+                <tr>
+                    <td>Rotor fault</td>
+                    <td>Issues in the rotor such as broken bars or slip rings.</td>
+                    <td>High mechanical stress, overheating.</td>
+                    <td>Reduced performance, increased power consumption.</td>
+                    <td>Perform periodic inspections, replace faulty parts.</td>
+                </tr>
+                <tr>
+                    <td>Bearing fault</td>
+                    <td>Degradation or failure of motor bearings.</td>
+                    <td>Insufficient lubrication, excessive load.</td>
+                    <td>Increased vibration, overheating.</td>
+                    <td>Ensure proper lubrication, monitor bearing condition.</td>
+                </tr>
+                <tr>
+                    <td>Overload fault</td>
+                    <td>Motor is operating beyond its capacity.</td>
+                    <td>Improper sizing, excessive load.</td>
+                    <td>Overheating, reduced lifespan.</td>
+                    <td>Redistribute load, use appropriately sized motors.</td>
+                </tr>
+                <tr>
+                    <td>Phase imbalance</td>
+                    <td>Unequal power distribution across phases.</td>
+                    <td>Faulty connections, power supply issues.</td>
+                    <td>Reduced efficiency, overheating.</td>
+                    <td>Ensure balanced phase loading, check connections.</td>
+                </tr>
+                <tr>
+                    <td>Insulation fault</td>
+                    <td>Degradation or failure of insulation materials.</td>
+                    <td>Heat, moisture, aging.</td>
+                    <td>Short circuits, motor failure.</td>
+                    <td>Perform insulation resistance tests, replace damaged insulation.</td>
+                </tr>
+                <tr>
+                    <td>Rotor bar fault</td>
+                    <td>Uneven magnetic fields,causing mechanical vibrations.</td>
+                    <td>Overcurrent,excessive vibration .</td>
+                    <td>Reduced motor efficiency, eventual failure.</td>
+                    <td>insulation testing, ensure current stability.</td>
+                </tr>
+
+            </tbody>
+        </table>
+        <a href="#" class="back-button" onclick="showParametersPage()">Back to Parameters</a>
+    </div>
+
+    <script>
+        // Handle Login
+        function handleLogin(event) {
+            event.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            if (username === '12345' && password === '12345') {
+                document.getElementById('loginPage').style.display = 'none';
+                document.getElementById('parametersPage').style.display = 'block';
+            } else {
+                alert('Invalid username or password');
+            }
+        }
+
+        // Show Fault Descriptions
+        function showFaultDescriptions() {
+            document.getElementById('parametersPage').style.display = 'none';
+            document.getElementById('faultDescriptionPage').style.display = 'block';
+        }
+
+        // Show Parameters Page
+        function showParametersPage() {
+            document.getElementById('faultDescriptionPage').style.display = 'none';
+            document.getElementById('parametersPage').style.display = 'block';
+        }
+
+        // Detect Faults
+        function detectFaults(voltage, current, temperature, vibration) {
+            let faults = [];
+
+            if (voltage < 200 || voltage > 270) {
+                faults.push("Voltage out of range");
+
+            }
+            if (current > 35) {
+                faults.push("High current draw");
+
+            }
+            if (temperature > 120) {
+                faults.push("Overheating");
+            }
+            if (vibration > 2.5) {
+                faults.push("Excessive vibration");
+            }
+
+            if (voltage < 215 || voltage > 240) {
+                faults.push("Stator winding fault");
+            }
+            if (current > 29) {
+                faults.push("Rotor fault");
+            }
+            if (temperature > 120) {
+                faults.push("Bearing fault");
+            }
+            if (vibration > 3) {
+                faults.push("Rotor slip fault");
+            }
+            if (current > 39) {
+                faults.push("Overload fault");
+            }
+            if (current > 35||vibration > 2.5) {
+                faults.push("Rotor bar fault");
+            }
+
+
+            return faults.length > 0 ? faults : ["No faults detected"];
+        }
+
+        // Handle File Upload
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const content = e.target.result;
+                const lines = content.split('\n').filter(line => line.trim());
+
+                lines.slice(1).forEach((line, index) => {
+                    setTimeout(() => {
+                        const [voltage, current, temperature, vibration] = line.split(',').map(parseFloat);
+
+                        document.getElementById('currentVoltage').textContent = voltage;
+                        document.getElementById('currentCurrent').textContent = current;
+                        document.getElementById('currentTemperature').textContent = temperature;
+                        document.getElementById('currentVibration').textContent = vibration;
+
+                        const faultNames = detectFaults(voltage, current, temperature, vibration);
+                        document.getElementById('predictedFaultNames').innerHTML = faultNames.map(fault => `<tr><td>${fault}</td></tr>`).join('');
+
+                        updateParameterStatus('voltageFault', voltage, 200, 270);
+                        updateParameterStatus('currentFault', current, 0, 30);
+                        updateParameterStatus('temperatureFault', temperature, 0, 120);
+                        updateParameterStatus('vibrationFault', vibration, 0, 2.5);
+                    }, index * 2000);
+                });
+            };
+            reader.readAsText(file);
+        }
+
+        function updateParameterStatus(elementId, value, min, max) {
+            const element = document.getElementById(elementId);
+
+            if (value < min || value > max) {
+                element.className = 'fault';
+                element.textContent = 'Fault';
+            } else {
+                element.className = 'normal';
+                element.textContent = 'Normal';
+            }
+        }
+    </script>
+</body>
+</html>
