@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Motor Login and Parameters</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: Arial, sans-serif;
+        }
+        .background {
+            background-image: url('first page background.jpeg'); /* Use your preferred background image here */
+            background-size: cover;
+            background-position: center;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .login-container {
+            width: 400px;
+            background-color: rgba(0, 0, 0, 0.8);
+            padding: 30px;
+            border-radius: 10px;
+            color: white;
+            box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.7);
+            text-align: center;
+        }
+        .login-container h2 {
+            margin-bottom: 30px;
+        }
+        .login-container input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+        }
+        .login-container input[type="text"], .login-container input[type="password"] {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+            outline: none;
+        }
+        .login-container input[type="submit"] {
+            background-color: #28a745;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+        .login-container input[type="submit"]:hover {
+            background-color: #218838;
+        }
+        .login-container a {
+            color: white;
+            text-decoration: none;
+            display: block;
+            margin-top: 20px;
+            transition: color 0.3s ease;
+        }
+        .login-container a:hover {
+            color: #ccc;
+        }
+
+        /* Motor Parameters Page */
+        .parameters-container {
+            display: none; /* Hide initially */
+            background-image: url('second page background.jpeg'); /* Use your motor page background image here */
+            background-size: cover;
+            background-position: center;
+            height: 100vh;
+            color: white;
+            padding: 50px;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .parameter-list {
+            display: flex;
+            flex-direction: column; /* Vertical arrangement */
+            align-items: center; /* Center the items */
+            list-style-type: none;
+            padding: 0;
+        }
+        .parameter-item {
+            margin: 10px 0;
+            font-size: 24px;
+            cursor: pointer;
+            background-color: rgba(0, 0, 0, 0.6);
+            padding: 10px;
+            border-radius: 5px;
+            width: 50%; /* Adjust width */
+            text-align: center; /* Center text */
+        }
+
+        /* Faults Page Styles */
+        .faults-container {
+            display: none; /* Hide initially */
+            background-color: #f8f9fa; /* Light background for faults page */
+            color: #343a40; /* Dark text color */
+            padding: 50px;
+            height: 100vh;
+            overflow-y: auto; /* Allow scrolling if needed */
+        }
+        .faults-container h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #007bff; /* Blue color for title */
+        }
+        .fault {
+            background-color: rgba(255, 255, 255, 0.9); /* Light background for each fault */
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 5px solid #007bff; /* Blue highlight on left */
+        }
+        .fault-title {
+            font-weight: bold; /* Bold title */
+            color: #dc3545; /* Red color for title */
+            font-size: 18px; /* Title font size */
+        }
+        .fault-description {
+            font-weight: normal; /* Regular weight for description */
+            color: #6c757d; /* Grey color for description */
+        }
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Login Page -->
+<div class="background" id="loginPage">
+    <div class="login-container">
+        <h2>Login</h2>
+        <form id="loginForm" onsubmit="return handleLogin(event)">
+            <input type="text" id="username" placeholder="Username" required>
+            <input type="password" id="password" placeholder="Password" required>
+            <input type="submit" value="Login">
+        </form>
+        <a href="#">Forgot your password?</a>
+    </div>
+</div>
+
+<!-- Motor Parameters Page -->
+<div class="parameters-container" id="parametersPage">
+    <h1>Motor Parameters</h1>
+    <ul class="parameter-list">
+        <li class="parameter-item" onclick="showFaults('voltage')">Voltage: <span id="voltageValue">0 V</span></li>
+        <li class="parameter-item" onclick="showFaults('current')">Current: <span id="currentValue">0 A</span></li>
+        <li class="parameter-item" onclick="showFaults('temperature')">Temperature: <span id="temperatureValue">0 °C</span></li>
+        <li class="parameter-item" onclick="showFaults('vibration')">Vibration: <span id="vibrationValue">0 mm/s</span></li>
+        <li class="parameter-item" onclick="showFaults('speed')">Speed: <span id="speedValue">0 RPM</span></li>
+    </ul>
+</div>
+
+<!-- Faults Display Page -->
+<div class="faults-container" id="faultsPage">
+    <h1 id="faultsTitle"></h1>
+    <div id="faultsColumns" style="display: flex; flex-direction: column;">
+        <!-- Faults will be injected here -->
+    </div>
+    <div id="realTimeData" style="margin-top: 20px;">
+        <h3>Real-Time Data</h3>
+        <p id="faultVoltage">Voltage: <span id="faultVoltageValue">0 V</span></p>
+        <p id="faultCurrent">Current: <span id="faultCurrentValue">0 A</span></p>
+        <p id="faultTemperature">Temperature: <span id="faultTemperatureValue">0 °C</span></p>
+        <p id="faultVibration">Vibration: <span id="faultVibrationValue">0 mm/s</span></p>
+        <p id="faultSpeed">Speed: <span id="faultSpeedValue">0 RPM</span></p>
+    </div>
+    <button onclick="goBackToParameters()">Back to Parameters</button>
+</div>
+
+<script>
+    // Function to handle login validation and redirection to parameters page
+    function handleLogin(event) {
+        event.preventDefault();
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+
+        // Simple authentication check
+        if (username === '12345' && password === '12345') {
+            // Hide login page and show parameters page
+            document.getElementById('loginPage').style.display = 'none';
+            document.getElementById('parametersPage').style.display = 'block';
+
+            // Start updating real-time data
+            startUpdatingData();
+        } else {
+            alert('Invalid username or password');
+        }
+    }
+
+    // Function to simulate real-time data updates
+    function startUpdatingData() {
+        setInterval(() => {
+            // Generate random data for each parameter within specified ranges
+            const voltage = Math.floor(Math.random() * (240 - 215 + 1)) + 215; // Random voltage between 215 and 240
+            const current = Math.floor(Math.random() * (29 - 5 + 1)) + 5; // Random current between 5 and 29
+            const temperature = Math.floor(Math.random() * (120 - 50 + 1)) + 50; // Random temperature between 50 and 120
+            const vibration = (Math.random() * (1 - 0.2) + 0.2).toFixed(2); // Random vibration between 0.2 and 1
+            const speed = Math.floor(Math.random() * (1490 - 1300 + 1)) + 1300; // Random speed between 1300 and 1490
+            
+            // Update parameter values
+            document.getElementById('voltageValue').textContent = `${voltage} V`;
+            document.getElementById('currentValue').textContent = `${current} A`;
+            document.getElementById('temperatureValue').textContent = `${temperature} °C`;
+            document.getElementById('vibrationValue').textContent = `${vibration} mm/s`;
+            document.getElementById('speedValue').textContent = `${speed} RPM`;
+        }, 3000); // Update every 3 seconds
+    }
+
+    // Function to show faults related to the selected parameter
+    function showFaults(parameter) {
+        const faultsTitle = document.getElementById('faultsTitle');
+        const faultsColumns = document.getElementById('faultsColumns');
+        faultsColumns.innerHTML = ''; // Clear previous faults
+
+        // Set the title for the faults page
+        faultsTitle.textContent = `${parameter.charAt(0).toUpperCase() + parameter.slice(1)} Faults`;
+
+        // Faults data structure
+        const faultsData = {
+            voltage: [
+                "Overheating Due to High Voltage: Supply voltage exceeding motor's rated voltage.",
+                "Torque Reduction Due to Low Voltage: Undervoltage reduces magnetic field.",
+                "Voltage Sag: Temporary drop in voltage due to starting of large loads.",
+                "Voltage Spike: Sudden surge in voltage due to lightning strikes.",
+                "Insulation Breakdown from Overvoltage: High voltage stresses insulation.",
+                "Voltage Flicker: Rapid voltage fluctuations due to switching of heavy loads.",
+                "Increased Losses Due to Voltage Unbalance: Voltage differences causing increased losses.",
+                "Stalling Due to Voltage Dip: Temporary voltage reduction causing stalling.",
+                "Motor Burnout Due to Prolonged Overvoltage: Continuous high voltage leads to overheating.",
+                "Harmonic Distortion: Non-linear loads distort voltage waveform.",
+                "Single Phasing from Voltage Drop in One Phase: Failure in one phase causes issues.",
+                "Motor Vibrations Due to Voltage Imbalance: Unequal voltage causing vibrations.",
+                "Overcurrent Drawn Due to Undervoltage: Motor compensates with higher current.",
+                "Rotor Bar Damage from Voltage Surges: Surges stress rotor bars.",
+                "Power Factor Reduction: Low voltage causes power factor drop.",
+                "Motor Control Malfunction Due to Voltage Surges: High voltage disrupts control circuits.",
+                "Increased Eddy Current Losses: Overvoltage increases losses.",
+                "Voltage Swell: Temporary increase in voltage above rated voltage.",
+                "Nuisance Tripping Due to Voltage Fluctuations: Relays trip due to sudden changes.",
+                "Ground Fault from Insulation Breakdown: High voltage deteriorates insulation."
+            ],
+            current: [
+               "Overcurrent Due to Overload: Excessive load causes overcurrent draw.",
+                "Phase Imbalance Overcurrent: Unbalanced phases cause current surge.",
+                "Transient Current Spike: Sudden load changes induce current spikes.",
+                "Inrush Current: Initial startup causes high inrush current.",
+                "Current Imbalance: Unequal current across phases causes overheating.",
+                "Motor Stall: High current due to motor stalling under heavy load.",
+                "Short Circuit: Fault in winding leads to excessive current.",
+                "Current Leakage: Insulation failure causing current leakage.",
+                "Increased Starting Current: High current when starting under load.",
+                "Overheating: Excessive current leads to overheating of windings.",
+                "Fuse Blowing: Overcurrent causes fuses to blow, disrupting operation.",
+                "Magnetizing Current: Excessive magnetizing current during operation.",
+                "Noise Generation: High current levels can cause audible noise.",
+                "Harmonic Distortion: Non-linear loads affect current waveform.",
+                "Capacitor Failure: Capacitor failure leads to high current draw.",
+                "Stator Damage: High current can damage stator windings.",
+                "Transformer Saturation: Overcurrent can saturate transformers.",
+                "Overload Relay Tripping: Protective relays trip due to high current.",
+                "Phase Loss: Loss of one phase increases current in remaining phases.",
+                "Motor Failure: Continuous high current can lead to motor failure."
+            ],
+            temperature: [
+                "Bearing Overheating: Misaligned bearings generate heat.",
+                "Rotor Overheating: Rotor malfunction generates excessive heat.",
+                "Insulation Degradation: High temperatures degrade insulation materials.",
+                "Overload Conditions: Running under overload increases temperature.",
+                "Cooling System Failure: Failed cooling increases temperature.",
+                "Ambient Temperature Effects: High ambient temperatures increase motor temperature.",
+                "Voltage Unbalance: Unbalanced voltages cause increased heat.",
+                "Frequent Starting: Frequent starts generate heat from inrush current.",
+                "Inadequate Heat Sinking: Poor heat sinks lead to overheating.",
+                "Harmonic Losses: Harmonics increase losses, leading to heat.",
+                "Resistance Changes: Increased resistance leads to higher temperatures.",
+                "Thermal Runaway: Poor thermal management can lead to thermal runaway.",
+                "Poor Ventilation: Insufficient airflow leads to overheating.",
+                "Friction Losses: High friction in bearings increases heat generation.",
+                "Mechanical Blockage: Blockages can restrict airflow and increase temperature.",
+                "Electrical Resistance: High electrical resistance generates additional heat.",
+                "Continuous Operation: Prolonged operation without rest can increase temperature.",
+                "High Humidity: Increased humidity can affect cooling and lead to overheating.",
+                "Increased Load: Excessive load can generate more heat.",
+                "Ambient Conditions: External factors like direct sunlight increase temperature.",
+                "Long Operating Hours: Extended use can lead to excessive heat buildup."
+            ],
+            vibration: [
+                      "Imbalanced Rotors: Uneven weight distribution in the rotor.",
+                "Misalignment: Shaft misalignment between motor and load.",
+                "Worn Bearings: Worn bearings can cause excessive vibration.",
+                "Loose Mounting: Loose mounting can lead to vibrations during operation.",
+                "Unbalanced Loads: Loads that are not evenly distributed cause vibrations.",
+                "Mechanical Resonance: Specific speeds can induce resonance and vibrations.",
+                "Faulty Foundations: Poor foundation can exacerbate vibrations.",
+                "Coupling Issues: Problems with couplings can induce vibration.",
+                "Misaligned Pulley: Pulleys that are misaligned can cause vibrations.",
+                "Harmonics: Harmonics can cause additional mechanical stresses.",
+                "Excessive Axial Play: Excessive play in the motor shaft leads to vibrations.",
+                "Defective Rotor: Defects in the rotor can cause vibrations.",
+                "Electrical Imbalance: Imbalance in electrical phases can cause vibrations.",
+                "Windage Loss: Air resistance in the rotor can cause vibrations.",
+                "Overloading: Excessive loading can cause mechanical stress and vibrations.",
+                "Heat-Related Expansion: Thermal expansion can cause alignment issues.",
+                "Worn Gear Teeth: Worn gears can create vibration during operation.",
+                "Loose Components: Loose parts in the assembly can rattle and cause vibrations.",
+                "Faulty Stator: Defective stator can also cause mechanical vibrations.",
+                "Poor Maintenance: Lack of maintenance can lead to undetected issues causing vibrations.",
+                "High Operating Speeds: Operating at high speeds can amplify vibrations."
+       ],
+            speed: [
+                   "Overspeed: Load disconnected or very light causing overspeed.",
+                "Underspeed: High load causing speed drop.",
+                "Motor Stalling: Heavy load causing motor to stall.",
+                "Frequency Drift: Variations in supply frequency affecting speed.",
+                "Control Circuit Failure: Malfunction in control circuits affects speed.",
+                "Incorrect Voltage: Incorrect supply voltage can affect speed.",
+                "Load Variations: Sudden changes in load can cause speed fluctuations.",
+                "Mechanical Blockage: Blockages can prevent normal motor operation.",
+                "Bearing Failure: Bearing issues can lead to reduced speed.",
+                "Inadequate Power Supply: Insufficient power supply leads to speed drop.",
+                "Overload Conditions: Excessive load can reduce speed.",
+                "Gearbox Malfunction: Faults in gearbox can affect output speed.",
+                "Phase Loss: Loss of phase leads to speed reduction.",
+                "Harmonic Distortion: Harmonics can affect motor speed.",
+                "Voltage Variations: Fluctuations in voltage can lead to speed issues.",
+                "Capacitor Failure: Capacitor failure in single-phase motors affects speed.",
+                "Faulty Sensors: Malfunctioning sensors can provide incorrect speed feedback.",
+                "Inverter Issues: Faulty inverters can lead to speed inconsistencies.",
+                "Ambient Temperature Effects: High temperatures can affect motor performance.",
+                "Electrical Noise: Electrical noise can interfere with speed control.",
+                "Mechanical Wear: Wear and tear on components can lead to speed issues."
+         ]
+        };
+
+        // Populate faults based on selected parameter
+        faultsData[parameter].forEach(fault => {
+            const faultItem = document.createElement('div');
+            faultItem.className = 'fault';
+            
+            const faultTitle = document.createElement('div');
+            faultTitle.className = 'fault-title';
+            faultTitle.textContent = fault.split(':')[0]; // Fault title before the colon
+
+            const faultDescription = document.createElement('div');
+            faultDescription.className = 'fault-description';
+            faultDescription.textContent = fault.split(':')[1]; // Fault description after the colon
+
+            faultItem.appendChild(faultTitle);
+            faultItem.appendChild(faultDescription);
+            faultsColumns.appendChild(faultItem);
+        });
+
+        // Update real-time data on faults page
+        document.getElementById('faultVoltageValue').textContent = document.getElementById('voltageValue').textContent;
+        document.getElementById('faultCurrentValue').textContent = document.getElementById('currentValue').textContent;
+        document.getElementById('faultTemperatureValue').textContent = document.getElementById('temperatureValue').textContent;
+        document.getElementById('faultVibrationValue').textContent = document.getElementById('vibrationValue').textContent;
+        document.getElementById('faultSpeedValue').textContent = document.getElementById('speedValue').textContent;
+
+        // Hide parameters page and show faults page
+        document.getElementById('parametersPage').style.display = 'none';
+        document.getElementById('faultsPage').style.display = 'block';
+    }
+
+    // Function to go back to parameters page
+    function goBackToParameters() {
+        document.getElementById('faultsPage').style.display = 'none';
+        document.getElementById('parametersPage').style.display = 'block';
+    }
+</script>
+
+</body>
+</html>
